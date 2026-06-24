@@ -15,12 +15,15 @@
 
   const styles = `
     .fb-custom-speed-panel {
-      position: absolute; bottom: 10px; left: 10px; z-index: 2147483647;
-      background: rgba(0,0,0,0.7); color: white; padding: 6px;
+      position: absolute; top: 70px; left: 10px; z-index: 2147483647;
+      background: rgba(0,0,0,0.4); color: white; padding: 6px;
       border-radius: 6px; font-size: 14px; display: flex; flex-direction: column; gap: 5px;
       backdrop-filter: blur(4px);
-      transition: opacity 0.5s ease;
+      transition: all 0.3s ease;
+      cursor: grab;
     }
+    .fb-custom-speed-panel:active { cursor: grabbing; }
+    .fb-custom-speed-panel:hover { background: rgba(0,0,0,0.8); }
     .fb-custom-speed-panel select { background: #333; color: white; border: 1px solid #555; border-radius: 3px; }
     .fb-custom-btn {
       background: #444; color: white; border: none; border-radius: 4px;
@@ -108,28 +111,13 @@
     const container = document.createElement("div");
     container.className = "fb-custom-speed-panel";
 
-    let hideTimeout;
-    const showPanel = () => {
-      container.style.opacity = '1';
-      container.style.pointerEvents = 'auto';
-      clearTimeout(hideTimeout);
-      hideTimeout = setTimeout(() => {
-        container.style.opacity = '0';
-        container.style.pointerEvents = 'none';
-      }, 3000);
-    };
-
-    root.addEventListener('mousemove', showPanel);
-    root.addEventListener('touchstart', showPanel);
-
-    container.addEventListener('mouseenter', () => {
-      clearTimeout(hideTimeout);
-      container.style.opacity = '1';
-      container.style.pointerEvents = 'auto';
-    });
-    container.addEventListener('mouseleave', showPanel);
-
-    showPanel();
+    // Khôi phục vị trí nếu đã từng kéo
+    const savedPos = GM_getValue("fbReelSpeedPos", null);
+    if (savedPos) {
+      container.style.top = savedPos.top;
+      container.style.left = savedPos.left;
+      container.style.bottom = 'auto';
+    }
 
     const row1 = document.createElement("div");
     row1.style.display = "flex";
@@ -179,6 +167,30 @@
       updateVideoSpeed(video, parseFloat(select.value), uiElements);
     input.onchange = () =>
       updateVideoSpeed(video, parseFloat(input.value), uiElements);
+      
+    // Logic kéo thả (Draggable)
+    let isDragging = false, startX, startY, startLeft, startTop;
+    container.addEventListener('mousedown', (e) => {
+      if (['INPUT', 'BUTTON', 'SELECT', 'OPTION'].includes(e.target.tagName)) return;
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startLeft = container.offsetLeft;
+      startTop = container.offsetTop;
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      container.style.left = (startLeft + e.clientX - startX) + 'px';
+      container.style.top = (startTop + e.clientY - startY) + 'px';
+      container.style.bottom = 'auto';
+    });
+    window.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        GM_setValue("fbReelSpeedPos", { top: container.style.top, left: container.style.left });
+      }
+    });
     setupHoldableButton(dec, video, uiElements, -0.1);
     setupHoldableButton(inc, video, uiElements, 0.1);
 
