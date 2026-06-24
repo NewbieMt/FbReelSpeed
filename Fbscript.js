@@ -111,13 +111,7 @@
     const container = document.createElement("div");
     container.className = "fb-custom-speed-panel";
 
-    // Khôi phục vị trí nếu đã từng kéo
-    const savedPos = GM_getValue("fbReelSpeedPos", null);
-    if (savedPos) {
-      container.style.top = savedPos.top;
-      container.style.left = savedPos.left;
-      container.style.bottom = 'auto';
-    }
+    // Vị trí mặc định ban đầu đã được thiết lập qua CSS, sẽ ghi đè sau khi append nếu có savedPos
 
     const row1 = document.createElement("div");
     row1.style.display = "flex";
@@ -211,6 +205,23 @@
     row2.append(dec, input, inc);
     container.append(row1, row2);
     root.appendChild(container);
+
+    // Khôi phục vị trí nếu đã từng kéo, có kiểm tra giới hạn
+    const savedPos = GM_getValue("fbReelSpeedPos", null);
+    if (savedPos) {
+      const maxLeft = root.offsetWidth - container.offsetWidth;
+      const maxTop = root.offsetHeight - container.offsetHeight;
+      
+      let initialLeft = parseFloat(savedPos.left);
+      let initialTop = parseFloat(savedPos.top);
+      
+      initialLeft = Math.max(0, Math.min(initialLeft, maxLeft));
+      initialTop = Math.max(0, Math.min(initialTop, maxTop));
+      
+      container.style.left = initialLeft + 'px';
+      container.style.top = initialTop + 'px';
+      container.style.bottom = 'auto';
+    }
 
     video.playbackRate = savedSpeed;
   }
