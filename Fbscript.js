@@ -181,8 +181,18 @@
     });
     window.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
-      container.style.left = (startLeft + e.clientX - startX) + 'px';
-      container.style.top = (startTop + e.clientY - startY) + 'px';
+      let newLeft = startLeft + e.clientX - startX;
+      let newTop = startTop + e.clientY - startY;
+      
+      // Giới hạn trong khung video
+      const maxLeft = root.offsetWidth - container.offsetWidth;
+      const maxTop = root.offsetHeight - container.offsetHeight;
+      
+      newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+      newTop = Math.max(0, Math.min(newTop, maxTop));
+      
+      container.style.left = newLeft + 'px';
+      container.style.top = newTop + 'px';
       container.style.bottom = 'auto';
     });
     window.addEventListener('mouseup', () => {
