@@ -2,7 +2,7 @@
 // @name         Facebook Reel Speed Controller + Overlay
 // @namespace    https://facebook.com
 // @version      2.0
-// @description  Bảng điều khiển tốc độ Video/Reels trên Facebook, ẩn overlay và đóng video thu nhỏ mượt mà.
+// @description  Bảng điều khiển tốc độ Video/Reels trên Facebook, ẩn overlay
 // @author       NewbieMt
 // @match        https://www.facebook.com/*
 // @grant        GM_setValue
@@ -19,6 +19,7 @@
       background: rgba(0,0,0,0.7); color: white; padding: 6px;
       border-radius: 6px; font-size: 14px; display: flex; flex-direction: column; gap: 5px;
       backdrop-filter: blur(4px);
+      transition: opacity 0.5s ease;
     }
     .fb-custom-speed-panel select { background: #333; color: white; border: 1px solid #555; border-radius: 3px; }
     .fb-custom-btn {
@@ -106,6 +107,29 @@
     const savedSpeed = GM_getValue("fbReelSpeed", 1.0);
     const container = document.createElement("div");
     container.className = "fb-custom-speed-panel";
+
+    let hideTimeout;
+    const showPanel = () => {
+      container.style.opacity = '1';
+      container.style.pointerEvents = 'auto';
+      clearTimeout(hideTimeout);
+      hideTimeout = setTimeout(() => {
+        container.style.opacity = '0';
+        container.style.pointerEvents = 'none';
+      }, 3000);
+    };
+
+    root.addEventListener('mousemove', showPanel);
+    root.addEventListener('touchstart', showPanel);
+
+    container.addEventListener('mouseenter', () => {
+      clearTimeout(hideTimeout);
+      container.style.opacity = '1';
+      container.style.pointerEvents = 'auto';
+    });
+    container.addEventListener('mouseleave', showPanel);
+
+    showPanel();
 
     const row1 = document.createElement("div");
     row1.style.display = "flex";
